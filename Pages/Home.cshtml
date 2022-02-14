@@ -8,12 +8,12 @@
 <article class="index">
     <header>
         <!--banner-slide 广告轮播-->
-        <section class="banner-slide banner-cover">
-            <div class="slide-slick">
+        <section class="banner-slide banner-cover" id="bannersPos">
+            @*<div class="slide-slick">
                 <div id="ban1" class="slick-ban" style="background-image: url(img/banner_cover1.jpg);"></div>
                 <div id="ban2" class="slick-ban" style="background-image: url(img/banner_cover2.jpg);"></div>
                 <div id="ban3" class="slick-ban" style="background-image: url(img/banner_cover3.jpg);"></div>
-            </div>
+            </div>*@
         </section>
         <!--/banner-slide 广告轮播-->
     </header>
@@ -413,15 +413,54 @@
 @section FOOTER{
 
     <script>
+        $(function(){
+            console.log("打開Home")
+
+            var merchantId = "alive"
+            //取得輪播牆資料
+            $.ajax({
+                type:"GET",
+                url:"https://localhost:44302/api/Product/GetActiveBanners?merchantId=" + merchantId,
+                processData : false, 
+                contentType : 'application/json;charset=UTF-8',
+                dataType:"json",
+                success:function(response){
+                    console.log("已連上GetActiveBanners", response)
+                    let banDivParent = $(`<div class="slide-slick"></div>`)
+                    response.forEach(x =>{
+                        //中層
+                        //let bana = $(`<a href="category" class="slick-slide slick-cloned"></a>`)
+                        //內層(一臉問號)
+                        //let banDiv = $(`<div id="" class="slick-ban" data-slick-index="${x['SortIndex']}" style="background-image: url(https://n2imageservice.azurewebsites.net/api/images/shopmall/${x["Image"]}/1550/0?1644815483672)"></div>`)
+                        //let banDiv = $(`<div id="ban1" class="slick-ban" style="background-image: url(img/banner_cover1.jpg);"></div>`)
+                        let banDiv = $(`<div class="slick-ban" style="background-image: url(https://n2imageservice.azurewebsites.net/api/images/shopmall/${x["Image"]}/1550/0?1644815483672)"></div>`)
+                        //bana.append(banDiv)
+                        //banDivParent.append(bana)
+                        banDivParent.append(banDiv)
+                    })
+                    //外層
+                    $("#bannersPos").append(banDivParent)
+
+                    $('.slide-slick').slick({
+                        autoplay: true,
+                        dots: true
+                    });
+                },
+                error:function(response){
+                    console.log("找不到")
+                }
+            })
+        })
+
         //banner 輪播
-        $('.slide-slick').slick({
-            autoplay: true,
-            dots: true
-        });
+        
 
         $('.popular-slick').slick({
             dots: true
         });
+
+
+        
     </script>
 
 }
