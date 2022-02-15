@@ -65,7 +65,7 @@
 </article>
 
 <script>
-    //取得主分類ID
+    //取得parameter
     let getUrlString = location.href;
     let url = new URL(getUrlString);
     //當前分類
@@ -83,11 +83,22 @@
     //底部頁面數量(這邊可自行更改)
     var pNumber = 5
     
-
-
-
     $(function(){
         //取得subcategory
+        GetSubcategory()
+
+        //取得分類標題
+        GetTitle()
+
+        //取得當前商品總數
+        GetProductCount()
+
+        //當前分類頁商品
+        GetProductFunc(1, size)
+    })
+
+    //取得subcategory
+    function GetSubcategory(){
         $.ajax({
             type:"GET",
             url:"https://localhost:44302/api/Category/GetChildCategoryByFatherId?merchantId=" + merchantId +"&prodCateId=" + prodCateId,
@@ -123,8 +134,10 @@
                 console.log("找不到")
             }
         })
-
-        //分類標題
+    }
+    
+    //取得分類標題
+    function GetTitle(){
         $.ajax({
             type:"GET",
             url:"https://localhost:44302/api/Category/GetProdCateDetail?merchantId=" + merchantId +"&prodCateId=" + prodCateId,
@@ -144,8 +157,10 @@
                 console.log("找不到")
             }
         })
+    } 
 
-        //當前分類總數
+    //取得當前商品總數
+    function GetProductCount(){
         $.ajax({
             type:"GET",
             url:"https://localhost:44302/api/Product/GetProductCountByProdCateId?merchantId=" + merchantId +"&prodCateId=" + prodCateId,
@@ -165,20 +180,9 @@
                 console.log("找不到")
             }
         })
-
-
-        GetProductFunc(1, size)
-
-    })
-
-    //切換頁面到categoryByprodCateId
-    function goCategory(){
-        let $this = $(event.target)
-        let prodCateId = $this.data("value")
-        window.location.href = "Category?prodCateId="+prodCateId
     }
 
-        //當前分類頁商品
+    //當前分類頁商品
     function GetProductFunc(page, size){
         $.ajax({
             type:"GET",
@@ -195,7 +199,7 @@
                         let liProduct = $(`
                             <li>
                                 <div class="prod">
-                                    <a href="product" class="prod-photo" style="background-image: url(img/ill_prod1.png);"></a>
+                                    <a onclick="goProduct()" data-value="${x["Id"]}" class="prod-photo" style="background-image: url(https://n2imageservice.azurewebsites.net/api/images/shopmall/${x["MainImage"]}/1550/0?1644815483672);"></a>
                                     <section class="prod-info">
                                         <p class="prod-cate">${categoryName}</p>
                                         <p class="prod-name">${x["SubTitle"]}</p>
@@ -222,6 +226,7 @@
         })
     }
 
+    //商品分頁數字生成
     function PageBuild(size, iCurrentPageIndex){
         $("#pager").empty()
 
@@ -293,5 +298,19 @@
             sb.append(yy)
         }
         $("#pager").append(sb)
+    }
+
+    //切換頁面到category
+    function goCategory(){
+        let $this = $(event.target)
+        let prodCateId = $this.data("value")
+        window.location.href = "Category?prodCateId="+prodCateId
+    }
+
+    //切換頁面到product
+    function goProduct(){
+        let $this = $(event.target)
+        let productId = $this.data("value")
+        window.location.href = "product?productId="+productId
     }
 </script>
