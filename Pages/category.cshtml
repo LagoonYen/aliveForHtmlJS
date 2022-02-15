@@ -51,15 +51,15 @@
         </section>
         <!--/products 产品列表-->
         <!--pager 页次-->
-        <section class="pager">
+        <section class="pager" id="pager">
             @*<asp:Literal runat="server" ClientIDMode="Static" ID="PageList"></asp:Literal>*@
-            <a href="?p=">&lt;</a>
+            @*<a href="?p=">&lt;</a>
             <span>1</span>
             <a href="#">2</a>
             <a href="#">3</a>
             <a href="#">4</a>
             <a href="#">5</a>
-            <a href="?p=">&gt;</a>
+            <a href="?p=">&gt;</a>*@
         </section>
     </div>
 </article>
@@ -74,14 +74,19 @@
     var merchantId = "alive"
 
     var categoryName = ""
+    //總筆數
+    var productCount= 0
+    //總頁數
+    var pageCount = 0
+    //每頁筆數
+    var size = 8
+    //底部頁面數量(這邊可自行更改)
+    var pNumber = 5
+    
+
+
 
     $(function(){
-        ////取得主分類ID
-        //let getUrlString = location.href;
-        //let url = new URL(getUrlString);
-        //var prodCateId = url.searchParams.get('prodCateId')
-
-        //var merchantId = "alive"
         //取得subcategory
         $.ajax({
             type:"GET",
@@ -151,6 +156,9 @@
                 console.log("已連上GetProductCountByProdCateId", response)
                 if(response != null){
                     $("#ProductCount").html("總數:" + response)
+
+                    //總筆數
+                    productCount = response
                 }
             },
             error:function(response){
@@ -158,8 +166,8 @@
             }
         })
 
-        GetProductFunc(1, 12)
 
+        GetProductFunc(1, size)
 
     })
 
@@ -202,11 +210,88 @@
                         ulProductList.append(liProduct)
                     })
                     $("#productZone").append(ulProductList);
+
+
+                    //製作分頁
+                    PageBuild(size, page)
                 }
             },
             error:function(response){
                 console.log("找不到")
             }
         })
+    }
+
+    function PageBuild(size, iCurrentPageIndex){
+        $("#pager").empty()
+
+        //總頁數
+        iPageTotal  = (productCount % 12 > 0) ? parseInt(productCount / size) + 1 : parseInt(productCount / size)
+        iCurrentPageIndex = iCurrentPageIndex - 1
+
+        //目前頁數
+        var iCurrentPage = iCurrentPageIndex + 1
+        //防呆 
+        if (iCurrentPage > iPageTotal )
+        {
+            iCurrentPage = iPageTotal 
+            iCurrentPageIndex = iCurrentPage - 1
+        }
+        if (iCurrentPage < 0)
+        {
+            iCurrentPage = 1
+            iCurrentPageIndex = 0
+        }
+
+        //頁數字按鈕共被分為幾分
+        var ppSize = iPageTotal / pNumber
+        if (pageCount % pNumber > 0)
+        {
+            ppSize++
+        }
+        //目前在哪一份(從1算起)，為了顯示「...」
+        var currentPPSize = (iCurrentPageIndex / pNumber) + 1
+
+        //要回傳的字串
+        var sb = $(`<div></div>`)
+
+        if(iCurrentPage > 2){
+            //第二頁以後才有上一頁
+            var strPreJS = ((iCurrentPage > 1) ? "GetProductFunc(" + (iCurrentPage - 1) + "," + size + ");" : "")
+            var outstrPreJS = $(`<a href="javascript:void(0);" onclick="` + strPreJS + `">&lt;</a>`)
+            sb.append(outstrPreJS)
+        }
+
+        //這公式算了我好久...Orz
+        var pStart = ((iCurrentPageIndex / pNumber) * pNumber + 1)
+        var pEnd = pStart + (pNumber - 1)
+        if (pEnd > iPageTotal)
+        {
+            pEnd = iPageTotal
+        }
+        if (currentPPSize > 1)
+        {
+            sb.append(`<a href="javascript:void(0);" onclick="GetProductFunc(` + (pStart - 1) + `,` + size +`)">` + (pStart - 1) + `</a>`)
+        }
+        //產生頁數按鈕(從1算起)
+        for (var i = pStart; i <= pEnd; i++)
+        {
+            //複製範例時候，class="highColor"可以刪除
+            var x = $(`<a href="javascript:void(0);" onclick="GetProductFunc(` + i + `,` + size +`)">` + i + `</a>`)
+            sb.append(x)
+        }
+        if (currentPPSize < ppSize)
+        {
+            var y = $(`<a href="javascript:void(0);" onclick="GetProductFunc(` + pEnd + `,` + size +`)">` + pEnd + `</a>`)
+            sb.append(y)
+        }
+
+        if(iCurrentPage < iPageTotal){
+            //目前頁小於最後一頁，就有下一頁按鈕
+            var strNextJS = (iCurrentPage < iPageTotal ? "GetProductFunc(" + (iCurrentPage + 1) + "," + size + ");" : "")
+            var yy = $(`<a href="javascript:void(0);" onclick="` + strNextJS + `">&gt;</a>`)
+            sb.append(yy)
+        }
+        $("#pager").append(sb)
     }
 </script>
