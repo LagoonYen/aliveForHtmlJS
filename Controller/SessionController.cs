@@ -24,9 +24,14 @@ namespace AliveStoreTemplate.Controller
                 //建立下訂商品
                 CartItem item = new CartItem
                 {
-                    ProductId = Req.productId,
-                    Amount = Req.orderNum,
-                    SubTotal = Req.price * Req.orderNum
+                    //商品ID
+                    ProductId = Req.ProductId,
+                    //商品款式ID
+                    ProductSpecId = Req.ProductSpecId,
+                    //下訂數量
+                    Amount = Req.OrderNum,
+                    //小計
+                    SubTotal = Req.Price * Req.OrderNum
                 };
 
                 //判斷是否有購物車
@@ -42,7 +47,7 @@ namespace AliveStoreTemplate.Controller
                     //如果購物車存在
                     List<CartItem> cart = Common.CommonUtil.SessionGetObject<List<CartItem>>(HttpContext.Session, "cart");
                     //檢查購物車中是否包含同樣商品
-                    int index = cart.FindIndex(x => x.ProductId.Equals(Req.productId));
+                    int index = cart.FindIndex(x => x.ProductId.Equals(Req.ProductId) && x.ProductSpecId.Equals(Req.ProductSpecId));
                     if (index != -1)
                     {
                         cart[index].Amount += item.Amount;

@@ -23,19 +23,20 @@ namespace AliveStoreTemplate.Common
         }
     }
 
-    public class OrderItem
+    public class CartItem
     {
-        public int Id { get; set; }
-        public int OrderId { get; set; }
-        public string ProductId { get; set; }  //商品ID
-        public int Amount { get; set; }     //數量
-        public int SubTotal { get; set; }   //小計
-    }
 
-    public class CartItem : OrderItem
-    {
-        public ProductInSession Product { get; set; } //商品內容
-        public string ImgSrc { get; set; } //商品圖片
+        public int Id { get; set; }
+
+        public int OrderId { get; set; }
+        //商品ID
+        public string ProductId { get; set; }
+        //商品SpecId
+        public string ProductSpecId { get; set; }
+        //數量
+        public int Amount { get; set; }
+        //小計
+        public int SubTotal { get; set; }
     }
 
     public class ProductInSession

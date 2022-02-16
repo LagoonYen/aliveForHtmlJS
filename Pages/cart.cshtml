@@ -31,7 +31,7 @@
 @*cart 购物车*@
 <article class="page cart">
     <div class="content-con">
-        <h2 class="page-tit"><em>购物车</em><span>选购产品<em class="count spancc">3</em></span></h2>
+        <h2 class="page-tit"><em>購物車</em><span>選購商品<em class="count spancc">3</em></span></h2>
         @*cart-recipient 收件资料*@
         <section class="forms-basic cart-recipient">
             <dl class="col2">
@@ -87,14 +87,14 @@
                             </a>
                         </th>
                         <th class="td-prod">商品</th>
-                        <th>单价</th>
-                        <th class="td-count">数量</th>
-                        <th>小计</th>
+                        <th>單價</th>
+                        <th class="td-count">數量</th>
+                        <th>小計</th>
                         <th class="td-action">&nbsp;</th>
                     </tr>
                 </thead>
                 <tbody id="tbOrder">
-                    <tr>
+                    @*<tr>
                         <td class="td-check">
                             <a class="btn-check">
                                 <input type="checkbox" value="1" /><i class="icon-check"></i>
@@ -116,7 +116,7 @@
                         <td class="td-action">
                             <a class="btn-delete"><i class="icon-trash"></i></a>
                         </td>
-                    </tr>
+                    </tr>*@
                 </tbody>
             </table>
         </section>
@@ -169,14 +169,121 @@
 
     @*pgaeJs*@
     <script type="text/javascript">
+
+        //商店名稱
+        var merchantId = "alive"
+
+
         $(function () {
             // 全选
             $(".btn-check").click(function () {
                 $(this).toggleClass('active');
             });
 
+            //取得購物車清單
+            GetProductFromCarBySession()
         });
+
+        //取得購物車清單
+        function GetProductFromCarBySession(){
+            $.ajax({
+                type:"Get",
+                url:"@Url.Action("GetProductFromCarBySession","Session")",
+                processData : false, 
+                contentType : 'application/json;charset=UTF-8',
+                dataType:"json",
+                success:function(response){
+                    console.log("已連上GetProductFromCarBySession, 目前購物車清單", response)
+                    response.forEach(x =>{
+                        //取得商品
+                        let Product = GetProductById(x.productId)
+                        //取得型號
+                        let ProductSpec = GetProductSpecByProdId(x.productId)
+                        
+                        //取得所選型號
+                        let SelectedSpec = ""
+                        let SelectedSpecId = ""
+                        for(let index = 0; index < ProductSpec.length; index++){
+                            SelectedSpec = (ProductSpec[index].Id == x.productSpecId) ? ProductSpec[index].Name : SelectedSpec
+                            SelectedSpecId = (ProductSpec[index].Id == x.productSpecId) ? ProductSpec[index].Id : SelectedSpecId
+                        }
+
+                        console.log("二次Ajax", x, Product, ProductSpec, SelectedSpec, SelectedSpecId)
+
+                        let trTbody = $(`<tr></tr>`)
+                        trTbody
+                            .append(`<td class="td-check">
+                                        <a class="btn-check">
+                                            <input type="checkbox" value="1"/><i class="icon-check"></i>
+                                        </a>
+                                    </td>`)
+                            .append(`<td class="td-prod">
+                                        <img src="https://n2imageservice.azurewebsites.net/api/images/shopmall/` + Product.MainImage + `/1550/0?1644815483672);" alt="" class="td-photo" />
+                                        <p class="td-name">${Product["Title"]}</p>
+                                        <p class="td-name" data-SpecId="${SelectedSpecId}">${SelectedSpec}</p>
+                                    </td>`)
+                            .append(`<td class="td-price" data-th="單價"><span>${Product["Price"]}</span></td>`)
+                            .append(`<td class="td-count" data-th="數量">
+                                        <div class="count-bar">
+                                            <a class="btn-count"><i class="icon-minus"></i></a>
+                                            <input type="number" value="${x.amount}"/>
+                                            <a class="btn-count"><i class="icon-plus"></i></a>
+                                        </div>
+                                    </td>`)
+                            .append(`<td class="td-price" data-th="小計"><span>${x["subTotal"]}</span></td>`)
+                            .append(`<td class="td-action">
+                                        <a class="btn-delete"><i class="icon-trash"></i></a>
+                                    </td>`)
+                        $("#tbOrder").append(trTbody)
+                    })
+                },
+                error:function(response){
+                    console.log("找不到")
+                }
+            })
+        }
+
+        //取得商品
+        function GetProductById(productId){
+            let data = false
+            $.ajax({
+                type:"Get",
+                url:"https://localhost:44302/api/Product/GetProductById?merchantId=" + merchantId +"&productId=" + productId,
+                processData : false, 
+                contentType : 'application/json;charset=UTF-8',
+                dataType:"json",
+                async:false,  //可能不好
+                success:function(response){
+                    console.log("二次已連上GetProductById", response)
+                    data = response
+                },
+                error:function(response){
+                    console.log("找不到")
+                }
+            })
+            return data
+        } 
+
+        //取得型號
+        function GetProductSpecByProdId(productId){
+            let data = false
+            $.ajax({
+                type:"GET",
+                url:"https://localhost:44302/api/Product/GetProductSpecByProdId?merchantId=" + merchantId +"&productId=" + productId,
+                processData : false, 
+                contentType : 'application/json;charset=UTF-8',
+                dataType:"json",
+                async:false, //可能不好
+                success:function(response){
+                    console.log("二次已連上GetProductSpecByProdId", response)
+                    data = response
+                },
+                error:function(response){
+                    console.log("找不到")
+                }
+            })
+            return data
+        }
+
     </script>
-
-
 }

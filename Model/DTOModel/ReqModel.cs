@@ -2,8 +2,9 @@
 {
     public class AddToCarReqModel
     {
-        public string productId { get; set; }
-        public int orderNum { get; set; }
-        public int price { get; set; }
+        public string ProductId { get; set; }
+        public string ProductSpecId { get; set; }
+        public int OrderNum { get; set; }
+        public int Price { get; set; }
     }
 }

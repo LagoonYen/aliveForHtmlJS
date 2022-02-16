@@ -161,7 +161,7 @@
         })
     }
 
-    //換算安插數量
+    //換算可購買數量
     function GetQuantity(){
         let Quantity = $("#OrderPatternSelectid").val().split(',')[1];
 
@@ -223,7 +223,7 @@
 
     //加入購物車
     function AddProductToCarBySession(){
-        var productId = $("#OrderPatternSelectid").val().split(',')[0]
+        var productSpecId = $("#OrderPatternSelectid").val().split(',')[0]
         var orderNum = parseInt($("#OrderNumSelectid").val())
         var price = parseInt($("#ProDiscountid").html())
         
@@ -237,9 +237,10 @@
             type:"Post",
             url:"@Url.Action("AddProductToCarBySession","Session")",
             data:JSON.stringify({
-                'productId':productId,
-                'orderNum':orderNum,
-                'price':price
+                'ProductId':productId,
+                'ProductSpecId':productSpecId,
+                'OrderNum':orderNum,
+                'Price':price
             }),
             processData : false, 
             contentType : 'application/json;charset=UTF-8',
@@ -251,5 +252,5 @@
                 console.log("找不到")
             }
         })
-     }
+    }
 </script>
