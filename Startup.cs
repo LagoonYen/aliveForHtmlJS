@@ -28,6 +28,22 @@ namespace AliveStoreTemplate
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
+            services.AddControllers();
+
+            //session相關
+            // 注入分散式記憶體快取
+            services.AddDistributedMemoryCache();
+            // 注入Session
+            services.AddSession(options => {
+                //session過期時間
+                options.IdleTimeout = TimeSpan.FromMinutes(60);
+                //設置為true表示前端js等腳本無法讀取cookie,防止了xss攻擊(默認為true)
+                options.Cookie.HttpOnly = true;
+                //Cookies是必須的(默認為false)
+                options.Cookie.IsEssential = true;
+            });
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,15 +60,20 @@ namespace AliveStoreTemplate
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            app.UseHttpsRedirection(); //這樣的話，Controller、Action不必再加上[RequireHttps]屬性
             app.UseStaticFiles();
 
             app.UseRouting();
 
+            // 使用Session
+            app.UseSession();
+
             app.UseAuthorization();
+            app.UseAuthorization(); //Controller、Action才能加上 [Authorize] 屬性
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllers();
                 endpoints.MapRazorPages();
             });
         }
