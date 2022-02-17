@@ -37,11 +37,11 @@
             <dl class="col2">
                 <dt>收件人<em class="must">*</em></dt>
                 <dd>
-                    <input type="text" value="" placeholder="请填入收件人姓名" />
+                    <input type="text" value="" id="inputRecipient" placeholder="请填入收件人姓名" />
                 </dd>
                 <dt>收件人手机号<em class="must">*</em></dt>
                 <dd>
-                    <input type="tel" value="" placeholder="请填入收件人手机号" />
+                    <input type="tel" value="" id="inputRecipientPhone" placeholder="请填入收件人手机号" />
                 </dd>
             </dl>
             <dl>
@@ -57,16 +57,16 @@
                         <select class="ui dropdown" style="min-width:80px" name="area" onchange="GetTownList()" id="area">
                             <option value="">請選擇</option>
                         </select>
-                        <select class="ui dropdown" style="min-width:80px" name="town" onchange="BulidAddr()" id="town">
+                        <select class="ui dropdown" style="min-width:80px" name="town" onchange="BuildAddr()" id="town">
                             <option value="">請選擇</option>
                         </select>
                         @*<input class="form-control" type="text" id="addr" />*@
-                        <input class="" type="text" value="" placeholder="请填入地址" />
+                        <input class="" type="text" value="" id="inputRecipientAddr" placeholder="请填入地址" />
                     </div>
                 </dd>
                 <dt>备注</dt>
                 <dd>
-                    <textarea name="" cols="0" rows="3" style="resize:none;height:200px"></textarea>
+                    <textarea name="" id="areaRemark" cols="0" rows="3" style="resize:none;height:200px"></textarea>
                 </dd>
             </dl>
         </section>
@@ -95,43 +95,50 @@
         @*cart-total 总计*@
         <section class="cart-total">
             <table class="forms-basic tab-total">
-                <tr>
+                @*<tr>
                     <th>
                         <span class="td-item">合计</span>
                     </th>
                     <td>
-                        <span class="ico_cgpCount " id="lbProdTPrice">720</span>
+                        <span class="ico_cgpCount " id="lbProdTPrice">0</span>
                     </td>
-                </tr>
-                @*
-                    <tr>
-                        <th>
-                            <span class="td-coupon">
-                                <input type="text" value="" />
-                                <button class="btn-active">新增</button>
-                            </span>
-                            <span class="td-item">优惠券</span>
-                        </th>
-                        <td class="td-price td-discount">100</td>
-                    </tr>
-                    <tr>
-                        <th>
-                            <span class="td-item">运费</span>
-                        </th>
-                        <td class="td-price">60</td>
-                    </tr>*@
+                </tr>*@
                 <tr>
                     <th>
                         <span class="td-item">总计</span>
                     </th>
                     <td class="td-total td-price">
-                        <span class="ico_cgpTotal td-total" id="lbTPrice">780</span>
+                        <span class="ico_cgpTotal td-total" id="lbTPrice">0</span>
                     </td>
                 </tr>
             </table>
         </section>
         <section class="cart-action">
-            <a href="checkout" class="btn-action">我要结算</a>
+            <div style="color:red" id="noticeForPay">注意:你现在所见的币值不代表最终币值，请详细确认后再行下单；若欲使用CGP币以外货币结帐，总价须超过一定金额：</div>
+            <select class="ui dropdown floating" style="width:250px" id="selectPayment" >
+                <option value="" style="display:none">請選擇付款方式</option>
+                <option value="CGP">CGP</option>
+                <option value="BTC">BTC</option>
+                <option value="ETH">ETH</option>
+                <option value="USDT">USDT</option>
+                <option value="SHIB" disabled>SHIB</option>
+            </select>
+        </section>
+        @*<div class="ui teal buttons">
+            <div class="ui button">請選擇付款方式</div>
+            <div class="ui floating dropdown icon button" id="selectPayment" >
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                    <div class="item" data-value="CGP"><i class="edit icon"></i>CGP</div>
+                    <div class="item" data-value="BTC"><i class="edit icon"></i>BTC</div>
+                    <div class="item" data-value="ETH"><i class="edit icon"></i>ETH</div>
+                    <div class="item" data-value="USDT"><i class="edit icon"></i>USDT</div>
+                    <div class="item" data-value="SHIB" disabled><i class="edit icon"></i>SHIB</div>
+                </div>
+            </div>
+        </div>*@
+        <section class="cart-action">
+            <a class="btn-action" onclick="PlaceOrder()">我要结算</a>
         </section>
     </div>
 </article>
@@ -152,7 +159,9 @@
             });
 
             //取得購物車
-            GetProductFromCarBySession()
+            let result = GetProductFromCarBySession()
+
+            BuildCarView(result)
 
             //建立地址Select
             GetProvinceList()
@@ -160,6 +169,7 @@
 
         //取得購物車
         function GetProductFromCarBySession(){
+            let result = ""
             $.ajax({
                 type:"Get",
                 url:"@Url.Action("GetProductFromCarBySession","Session")",
@@ -169,17 +179,18 @@
                 async:false,  //可能不好
                 success:function(response){
                     console.log("已連上GetProductFromCarBySession, 目前購物車清單", response)
-
-                    BulidCarView(response);
+                    result = response
                 },
                 error:function(response){
                     console.log("找不到")
                 }
             })
+            return result;
         }
 
         //建立購物車畫面
-        function BulidCarView(response){
+        function BuildCarView(response){
+            console.log("建立購物車", response)
             $("#tbOrder").empty()
 
             if(response != null){
@@ -296,7 +307,9 @@
                     //console.log("已連上DelProductfromCarBySession", response)
 
                     //重構購物車
-                    GetProductFromCarBySession()
+                    let result = GetProductFromCarBySession()
+                    
+                    BuildCarView(result)
                 },
                 error:function(response){
                     console.log("找不到")
@@ -367,7 +380,7 @@
                 contentType : 'application/json;charset=UTF-8',
                 success:function(response){
                     //重構購物車
-                    BulidCarView(response)
+                    BuildCarView(response)
                     //GetProductFromCarBySession()
                 },
                 error:function(response){
@@ -384,7 +397,6 @@
                 processData : false, 
                 contentType : 'application/json;charset=UTF-8',
                 dataType:"json",
-                async:false,  //可能不好
                 success:function(response){
                     console.log("二次已連上GetProvinceList", response)
 
@@ -407,7 +419,6 @@
                 processData : false, 
                 contentType : 'application/json;charset=UTF-8',
                 dataType:"json",
-                async:false,  //可能不好
                 success:function(response){
                     console.log("二次已連上GetCityList", response)
                     let option = (`<option value="">請選擇</option>`)
@@ -437,7 +448,6 @@
                 processData : false, 
                 contentType : 'application/json;charset=UTF-8',
                 dataType:"json",
-                async:false,  //可能不好
                 success:function(response){
                     console.log("二次已連上GetCountyList", response)
                     let option = (`<option value="">請選擇</option>`)
@@ -465,7 +475,6 @@
                 processData : false, 
                 contentType : 'application/json;charset=UTF-8',
                 dataType:"json",
-                async:false,  //可能不好
                 success:function(response){
                     console.log("二次已連上GetTownList", response)
                     let option = (`<option value="">請選擇</option>`)
@@ -483,28 +492,123 @@
         }
 
         //地址完成後改變input
-        function BulidAddr(){
+        function BuildAddr(){
             console.log("地址建立完成", $("#province option:selected").text(), $("#city option:selected").text(), $("#area option:selected").text(), $("#town option:selected").text())
         }
 
-        //建立訂單
-        function PlaceOrder(){
+        //確認是否有貨
+        function CheckCanBuy(ProductSpecId, Amount){
+            let TF = ""
             $.ajax({
-                type:"Post",
-                url:"https://localhost:44302/api/Order/GetTownList?lastLevelId=" + area,
+                type:"Get",
+                url:"https://localhost:44302/api/Order/CheckIsProductCanBuy?merchantId=" + merchantId + "&productSpecId=" + ProductSpecId + "&qvt=" + Amount,
                 processData : false, 
                 contentType : 'application/json;charset=UTF-8',
                 dataType:"json",
                 async:false,  //可能不好
                 success:function(response){
-                    console.log("二次已連上GetTownList", response)
-                    let option = (`<option value="">請選擇</option>`)
-                    $("#town").empty()
-                    $("#town").append(option)
+                    console.log("二次已連上CheckIsProductCanBuy", response)
+                    TF = response
+                },
+                error:function(response){
+                    console.log("找不到")
+                }
+            })
+            return TF
+        }
 
-                    response.forEach(x =>{
-                        $("#town").append(`<option value="${x["id"]}" >${x["name"]}</option>`)
-                    })
+        //建立訂單
+        function PlaceOrder(){
+            let carData = GetProductFromCarBySession()
+            if(carData == undefined){
+                alert("請添加商品至購物車")
+                return
+            }
+
+            if($("#inputRecipient").val() == "" || $("#inputRecipientPhone").val() == "" || $("#inputRecipientAddr").val() == "" || $("#province").val() == "" || $("#city").val() == "" || $("#area").val() == "" || $("#town").val() == ""){
+                alert("請完成收件資訊")
+                return
+            }
+
+           if($("#selectPayment").val() == ""){
+               alert("請選擇付款方式")
+                return
+           }
+
+            let TF = true
+            for(let x = 0; x < carData.length; x++){
+                if(TF){
+                    TF = CheckCanBuy(carData[x].productSpecId, carData[x].amount)
+                }
+            }
+
+            if(!TF){
+                alert("商品數量不足")
+                return
+            }
+
+            let productList = []
+
+            for(let x = 0; x < carData.length; x++){
+
+                console.log(carData[x])
+
+                //取得商品
+                let Product = GetProductById(carData[x].productId)
+                //取得型號
+                let ProductSpec = GetProductSpecByProdSpecId(carData[x].productSpecId)
+
+                let product = {
+                    "ProductId": carData[x].productId,
+                    "ProductSpecId": carData[x].productSpecId,
+                    "ProductName": Product.Title,
+                    "Price": Product.Price,
+                    "ProductSpecName": ProductSpec.Name,
+                    "storageQuantity": ProductSpec.Quantity,
+                    "BuyQuantity": carData[x].amount,
+                    "TotalPrice": carData[x].subTotal
+                }
+
+                productList.push(product)
+            }
+
+            console.log(productList)
+
+            let formdata = {
+                "MerchantId":merchantId,
+                "BuyerName": $("#inputRecipient").val(),
+                "BuyerMobile": $("#inputRecipientPhone").val(),
+                "BuyerAddress": $("#inputRecipientAddr").val(),
+                "BuyerRemark": $("#areaRemark").val(),
+                "BuyerAddressProvinceCode": $("#province").val(),
+                "BuyerAddressCityCode": $("#city").val(),
+                "BuyerAddressCountyCode": $("#area").val(),
+                "BuyerAddressTownCode": $("#town").val(),
+                "BuyerAddressProvince": $("#province option:selected").text(),
+                "BuyerAddressCity": $("#city option:selected").text(),
+                "BuyerAddressCounty": $("#area option:selected").text(),
+                "BuyerAddressTown": $("#town option:selected").text(),
+                "Items": productList,
+                "PaymentType": $("#selectPayment").val()
+            }
+            console.log(formdata)
+            $.ajax({
+                type:"Post",
+                url:"https://localhost:44302/api/Order/PlaceOrder?merchantId=" + merchantId,
+                processData : false, 
+                contentType : 'application/json;charset=UTF-8',
+                data:JSON.stringify(formdata),
+                dataType:"json",
+                success:function(response){
+                    console.log("二次已連上PlaceOrder", response)
+                    let TF = response.startsWith('http')
+                    if(TF){
+                        CleanCar()
+                        location.href = response
+                    }
+                    else{
+                        alert.(response)
+                    }
                 },
                 error:function(response){
                     console.log("找不到")
@@ -512,34 +616,19 @@
             })
         }
 
-        //Test訂單資料
-        //{
-        //  "MerchantId": "alive",
-        //  "BuyerName": "Hsu",
-        //  "BuyerMobile": "0972753301",
-        //  "BuyerAddress": "光明街",
-        //  "BuyerRemark": "NO",
-        //  "BuyerAddressProvinceCode": "110000000000",
-        //  "BuyerAddressCityCode": "110100000000",
-        //  "BuyerAddressCountyCode": "110101000000",
-        //  "BuyerAddressTownCode": "110101001000",
-        //  "BuyerAddressProvince": "北京市",
-        //  "BuyerAddressCity": "市辖区",
-        //  "BuyerAddressCounty": "东城区",
-        //  "BuyerAddressTown": "东华门街道办事处",
-        //  "Items": [
-        //    {
-        //      "ProductId": "a3279dae3b0542b6a353e87d921da95b",
-        //      "ProductSpecId": "7273d54adaa44bc88bd7fc3c7518c752",
-        //      "ProductName": "Bose｜SoundSport运动无线蓝牙耳机",
-        //      "Price": 1409,
-        //      "ProductSpecName": "蓝色",
-        //      "storageQuantity": 1,
-        //      "BuyQuantity": "1",
-        //      "TotalPrice": 1409
-        //    }
-        //  ],
-        //  "PaymentType": "CGP"
-        //}
+        function CleanCar(){
+            $.ajax({
+                type:"Delete",
+                url:"@Url.Action("CleanShopcar","Session")",
+                processData : false, 
+                contentType : 'application/json;charset=UTF-8',
+                success:function(){
+                    console.log("二次已連上CleanShopcar")
+                },
+                error:function(response){
+                    console.log("找不到")
+                }
+            })
+        }
     </script>
 }

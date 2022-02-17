@@ -25,10 +25,6 @@ namespace AliveStoreTemplate.Common
 
     public class CartItem
     {
-
-        public int Id { get; set; }
-
-        public int OrderId { get; set; }
         //商品ID
         public string ProductId { get; set; }
         //商品SpecId

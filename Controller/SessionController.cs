@@ -165,5 +165,25 @@ namespace AliveStoreTemplate.Controller
                 return BadRequest(ex.Message);
             }
         }
+
+        /// <summary>
+        /// 移除購物車
+        /// </summary>
+        /// <returns></returns>
+        [HttpDelete]
+        [Route("[action]")]
+        public IActionResult CleanShopcar()
+        {
+            try
+            {
+                Common.CommonUtil.Remove(HttpContext.Session, "cart");
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
