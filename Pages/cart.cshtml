@@ -151,14 +151,14 @@
                 $(this).toggleClass('active');
             });
 
-            //建立購物車畫面
+            //取得購物車
             GetProductFromCarBySession()
 
             //建立地址Select
             GetProvinceList()
         });
 
-        //建立購物車畫面
+        //取得購物車
         function GetProductFromCarBySession(){
             $.ajax({
                 type:"Get",
@@ -169,61 +169,66 @@
                 async:false,  //可能不好
                 success:function(response){
                     console.log("已連上GetProductFromCarBySession, 目前購物車清單", response)
-                    $("#tbOrder").empty()
 
-                    if(response != null){
-
-                        response.forEach(x =>{
-                            //取得商品
-                            let Product = GetProductById(x.productId)
-                            //取得型號
-                            let ProductSpec = GetProductSpecByProdSpecId(x.productSpecId)
-                        
-                            //取得所選型號
-                            let SelectedSpec = ProductSpec.Name
-                            let productSpecId = ProductSpec.Id
-                            let SelectedSpecQuantity = ProductSpec.Quantity
-
-                            console.log("二次Ajax", x, Product, ProductSpec, SelectedSpec, productSpecId)
-
-                            let trTbody = $(`<tr></tr>`)
-                            trTbody
-                                .append(`<td class="td-check">
-                                            <a class="btn-check">
-                                                <input type="checkbox" value="1"/><i class="icon-check"></i>
-                                            </a>
-                                        </td>`)
-                                .append(`<td class="td-prod">
-                                            <img src="https://n2imageservice.azurewebsites.net/api/images/shopmall/` + Product.MainImage + `/1550/0?1644815483672);" alt="" class="td-photo" />
-                                            <p class="td-name">${Product["Title"]}</p>
-                                            <p class="td-name" data-SpecId="${productSpecId}">${SelectedSpec}</p>
-                                        </td>`)
-                                .append(`<td class="td-price" data-th="單價"><span>${Product["Price"]}</span></td>`)
-                                .append(`<td class="td-count" data-th="">
-                                            <div class="count-bar">
-                                                <a class="btn-count" >
-                                                    <i class="minus circle icon" onclick="OrderNumChange()" data-symbol="minus" data-productid="${x.productId}" data-productSpecId="${productSpecId}" data-selectedspecquantity="${SelectedSpecQuantity}"></i>
-                                                </a>
-                                                <input class="CountInput" type="number" value="${x.amount}"/>
-                                                <a class="btn-count">
-                                                    <i class="plus circle icon" onclick="OrderNumChange()" data-symbol="plus" data-productid="${x.productId}" data-productSpecId="${productSpecId}" data-selectedspecquantity="${SelectedSpecQuantity}"></i>
-                                                </a>
-                                            </div>
-                                        </td>`)
-                                .append(`<td class="td-price" data-th="小計"><span>${x["subTotal"]}</span></td>`)
-                                .append(`<td class="td-action">
-                                            <a class="btn-delete">
-                                                <i class="trash icon" onclick="DelProductfromCarBySession({productId:'${x["productId"]}', productSpecId:'${productSpecId}'})"></i>
-                                            </a>
-                                        </td>`)
-                            $("#tbOrder").append(trTbody)
-                        })
-                    }
+                    BulidCarView(response);
                 },
                 error:function(response){
                     console.log("找不到")
                 }
             })
+        }
+
+        //建立購物車畫面
+        function BulidCarView(response){
+            $("#tbOrder").empty()
+
+            if(response != null){
+                response.forEach(x =>{
+                    //取得商品
+                    let Product = GetProductById(x.productId)
+                    //取得型號
+                    let ProductSpec = GetProductSpecByProdSpecId(x.productSpecId)
+                        
+                    //取得所選型號
+                    let SelectedSpec = ProductSpec.Name
+                    let productSpecId = ProductSpec.Id
+                    let SelectedSpecQuantity = ProductSpec.Quantity
+
+                    console.log("二次Ajax", x, Product, ProductSpec, SelectedSpec, productSpecId)
+
+                    let trTbody = $(`<tr></tr>`)
+                    trTbody
+                        .append(`<td class="td-check">
+                                    <a class="btn-check">
+                                        <input type="checkbox" value="1"/><i class="icon-check"></i>
+                                    </a>
+                                </td>`)
+                        .append(`<td class="td-prod">
+                                    <img src="https://n2imageservice.azurewebsites.net/api/images/shopmall/` + Product.MainImage + `/1550/0?1644815483672);" alt="" class="td-photo" />
+                                    <p class="td-name">${Product["Title"]}</p>
+                                    <p class="td-name" data-SpecId="${productSpecId}">${SelectedSpec}</p>
+                                </td>`)
+                        .append(`<td class="td-price" data-th="單價"><span>${Product["Price"]}</span></td>`)
+                        .append(`<td class="td-count" data-th="">
+                                    <div class="count-bar">
+                                        <a class="btn-count" >
+                                            <i class="minus circle icon" onclick="OrderNumChange()" data-symbol="minus" data-productid="${x.productId}" data-productSpecId="${productSpecId}" data-selectedspecquantity="${SelectedSpecQuantity}"></i>
+                                        </a>
+                                        <input class="CountInput" type="number" value="${x.amount}"/>
+                                        <a class="btn-count">
+                                            <i class="plus circle icon" onclick="OrderNumChange()" data-symbol="plus" data-productid="${x.productId}" data-productSpecId="${productSpecId}" data-selectedspecquantity="${SelectedSpecQuantity}"></i>
+                                        </a>
+                                    </div>
+                                </td>`)
+                        .append(`<td class="td-price" data-th="小計"><span>${x["subTotal"]}</span></td>`)
+                        .append(`<td class="td-action">
+                                    <a class="btn-delete">
+                                        <i class="trash icon" onclick="DelProductfromCarBySession({productId:'${x["productId"]}', productSpecId:'${productSpecId}'})"></i>
+                                    </a>
+                                </td>`)
+                    $("#tbOrder").append(trTbody)
+                })
+            }
         }
 
         //取得商品
@@ -309,28 +314,43 @@
             let countNow = parseInt($this.parent().siblings(".CountInput").val()) //用不到
             let quantity = $this.data("selectedspecquantity")  //用不到
             console.log("符號, 商品id, 商品規格, 目前購物車內數量, 物品上限", symbol, productId, productSpecId, countNow, quantity)
-            if(symbol == "plus"){
-                countNow = countNow + 1
-                if(countNow > quantity){
-                    return
-                }
-                else{
-                    $this.parent().siblings(".CountInput").attr("value", countNow)
-                    UpdateCart(productId, productSpecId, symbol)
-                }
+            //判斷+-
+            countNow = (symbol == "plus") ? countNow + 1 : countNow -1
+            //判斷結果做事
+            if(countNow > quantity){
+                return
             }
-            else if(symbol == "minus"){
-                countNow = countNow -1
-                if(countNow == 0){
-                    $this.parent().siblings(".CountInput").attr("value", countNow)
+            else if(countNow == 0){
+                $this.parent().siblings(".CountInput").attr("value", countNow)
                     let data ={'productId' : productId, 'productSpecId' : productSpecId}
                     DelProductfromCarBySession(data)
-                }
-                else{
-                    $this.parent().siblings(".CountInput").attr("value", countNow)
-                    UpdateCart(productId, productSpecId, symbol)
-                }
             }
+            else{
+                $this.parent().siblings(".CountInput").attr("value", countNow)
+                    UpdateCart(productId, productSpecId, symbol)
+            }
+            //if(symbol == "plus"){
+            //    countNow = countNow + 1
+            //    if(countNow > quantity){
+            //        return
+            //    }
+            //    else{
+            //        $this.parent().siblings(".CountInput").attr("value", countNow)
+            //        UpdateCart(productId, productSpecId, symbol)
+            //    }
+            //}
+            //else if(symbol == "minus"){
+            //    countNow = countNow -1
+            //    if(countNow == 0){
+            //        $this.parent().siblings(".CountInput").attr("value", countNow)
+            //        let data ={'productId' : productId, 'productSpecId' : productSpecId}
+            //        DelProductfromCarBySession(data)
+            //    }
+            //    else{
+            //        $this.parent().siblings(".CountInput").attr("value", countNow)
+            //        UpdateCart(productId, productSpecId, symbol)
+            //    }
+            //}
         }
 
         //更新購物車單筆資料
@@ -345,9 +365,10 @@
                 }),
                 processData : false, 
                 contentType : 'application/json;charset=UTF-8',
-                success:function(){
+                success:function(response){
                     //重構購物車
-                    GetProductFromCarBySession()
+                    BulidCarView(response)
+                    //GetProductFromCarBySession()
                 },
                 error:function(response){
                     console.log("找不到")

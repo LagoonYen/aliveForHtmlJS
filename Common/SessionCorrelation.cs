@@ -35,6 +35,8 @@ namespace AliveStoreTemplate.Common
         public string ProductSpecId { get; set; }
         //數量
         public int Amount { get; set; }
+        //單價
+        public int Price { get; set; }
         //小計
         public int SubTotal { get; set; }
     }

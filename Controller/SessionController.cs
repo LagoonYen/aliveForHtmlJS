@@ -35,7 +35,9 @@ namespace AliveStoreTemplate.Controller
                     //下訂數量
                     Amount = Req.OrderNum,
                     //小計
-                    SubTotal = Req.Price * Req.OrderNum
+                    SubTotal = Req.Price * Req.OrderNum,
+                    //單價
+                    Price = Req.Price
                 };
 
                 //判斷是否有購物車
@@ -128,6 +130,11 @@ namespace AliveStoreTemplate.Controller
             }
         }
 
+        /// <summary>
+        /// 修改數量
+        /// </summary>
+        /// <param name="Req"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("[action]")]
         public IActionResult PatchProductNumFromCarBySession(PatchFromCarReqModel Req)
@@ -141,15 +148,17 @@ namespace AliveStoreTemplate.Controller
                 if(Req.Symbol == "plus")
                 {
                     cart[index].Amount++;
+                    cart[index].SubTotal = cart[index].SubTotal + cart[index].Price;
                 }
                 else
                 {
                     cart[index].Amount--;
+                    cart[index].SubTotal = cart[index].SubTotal - cart[index].Price;
                 }
 
                 Common.CommonUtil.SessionSetObject(HttpContext.Session, "cart", cart);
 
-                return Ok();
+                return Ok(cart);
             }
             catch (Exception ex)
             {
