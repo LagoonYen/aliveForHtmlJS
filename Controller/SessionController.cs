@@ -13,7 +13,11 @@ namespace AliveStoreTemplate.Controller
 
     public class SessionController : ControllerBase
     {
-
+        /// <summary>
+        /// 加入到購物車
+        /// </summary>
+        /// <param name="Req"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("[action]")]
         public IActionResult AddProductToCarBySession([FromBody]AddToCarReqModel Req)
@@ -69,7 +73,11 @@ namespace AliveStoreTemplate.Controller
                 return BadRequest(ex.Message);
             }
         }
-
+        
+        /// <summary>
+        /// 取得購物車
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("[action]")]
         public IActionResult GetProductFromCarBySession()
@@ -78,6 +86,70 @@ namespace AliveStoreTemplate.Controller
             {
                 List<CartItem> cart = Common.CommonUtil.SessionGetObject<List<CartItem>>(HttpContext.Session, "cart");
                 return Ok(cart);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 移除自購物車
+        /// </summary>
+        /// <param name="Req"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[action]")]
+        public IActionResult DelProductFromCarBySession(DelFromCarReqModel Req)
+        {
+            try
+            {
+                List<CartItem> cart = Common.CommonUtil.SessionGetObject<List<CartItem>>(HttpContext.Session, "cart");
+
+                //index定位後移除
+                int index = cart.FindIndex(x => x.ProductId.Equals(Req.ProductId) && x.ProductSpecId.Equals(Req.ProductSpecId));
+                cart.RemoveAt(index);
+
+                // 購物車小於1項商品時移除購物車 否則重新寫入session
+                if (cart.Count < 1)
+                {
+                    Common.CommonUtil.Remove(HttpContext.Session, "cart");
+                }
+                else
+                {
+                    Common.CommonUtil.SessionSetObject(HttpContext.Session, "cart", cart);
+                }
+
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public IActionResult PatchProductNumFromCarBySession(PatchFromCarReqModel Req)
+        {
+            try
+            {
+                List<CartItem> cart = Common.CommonUtil.SessionGetObject<List<CartItem>>(HttpContext.Session, "cart");
+
+                //index定位後移除
+                int index = cart.FindIndex(x => x.ProductId.Equals(Req.ProductId) && x.ProductSpecId.Equals(Req.ProductSpecId));
+                if(Req.Symbol == "plus")
+                {
+                    cart[index].Amount++;
+                }
+                else
+                {
+                    cart[index].Amount--;
+                }
+
+                Common.CommonUtil.SessionSetObject(HttpContext.Session, "cart", cart);
+
+                return Ok();
             }
             catch (Exception ex)
             {
