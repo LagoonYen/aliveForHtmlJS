@@ -201,7 +201,7 @@
                                 <div class="prod">
                                     <a onclick="goProduct()" data-value="${x["Id"]}" class="prod-photo" style="background-image: url(https://n2imageservice.azurewebsites.net/api/images/shopmall/${x["MainImage"]}/1550/0?1644815483672);"></a>
                                     <section class="prod-info">
-                                        <p class="prod-cate">${categoryName}</p>
+                                        <p class="prod-cate">${categoryName}123</p>
                                         <p class="prod-name">${x["SubTitle"]}</p>
                                         <p class="prod-intro">${x["SubTitle"]}</p>
                                         <p class="prod-price">
@@ -312,5 +312,10 @@
         let $this = $(event.target)
         let productId = $this.data("value")
         window.location.href = "product?productId="+productId
+    }
+
+    function test(i){
+        console.log(i)
+        return "123" + i
     }
 </script>

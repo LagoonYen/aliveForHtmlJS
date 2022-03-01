@@ -108,7 +108,7 @@
                         <span class="td-item">总计</span>
                     </th>
                     <td class="td-total td-price">
-                        <span class="ico_cgpTotal td-total" id="lbTPrice">0</span>
+                        <span class="ico_cgpTotal td-total" id="lbTPrice"></span>
                     </td>
                 </tr>
             </table>
@@ -151,6 +151,8 @@
         //商店名稱
         var merchantId = "alive"
 
+        //付款token
+        var sToken = "DDlnHbZAA6KGp0Y4LGz9"
 
         $(function () {
             // 全选
@@ -193,6 +195,8 @@
             console.log("建立購物車", response)
             $("#tbOrder").empty()
 
+            let allProductTotalPrice = 0
+
             if(response != null){
                 response.forEach(x =>{
                     //取得商品
@@ -204,6 +208,9 @@
                     let SelectedSpec = ProductSpec.Name
                     let productSpecId = ProductSpec.Id
                     let SelectedSpecQuantity = ProductSpec.Quantity
+                    
+                    //全部價錢加總
+                    allProductTotalPrice += x.subTotal
 
                     console.log("二次Ajax", x, Product, ProductSpec, SelectedSpec, productSpecId)
 
@@ -234,12 +241,14 @@
                         .append(`<td class="td-price" data-th="小計"><span>${x["subTotal"]}</span></td>`)
                         .append(`<td class="td-action">
                                     <a class="btn-delete">
-                                        <i class="trash icon" onclick="DelProductfromCarBySession({productId:'${x["productId"]}', productSpecId:'${productSpecId}'})"></i>
+                                        <i class="trash icon" onclick="DelProductfromCarBySession('${x.productId}', '${productSpecId}')"></i>
                                     </a>
                                 </td>`)
                     $("#tbOrder").append(trTbody)
                 })
             }
+
+            $("#lbTPrice").text(allProductTotalPrice)
         }
 
         //取得商品
@@ -285,14 +294,14 @@
         }
 
         //將購物車內商品移除
-        function DelProductfromCarBySession(data){
+        function DelProductfromCarBySession(productId, productSpecId){
             //let $this = $(event.target)
             //console.log("刪除", productId, productSpecId)
-            console.log(data)
-            let productId = data.productId
-            let productSpecId = data.productSpecId
+            console.log(productId, productSpecId)
+            //let productId = data.productId
+            //let productSpecId = data.productSpecId
             //let productSpecId = data.selectedspecid
-
+            return;
             $.ajax({
                 type:"Post",
                 url:"@Url.Action("DelProductfromCarBySession","Session")",
@@ -342,28 +351,6 @@
                 $this.parent().siblings(".CountInput").attr("value", countNow)
                     UpdateCart(productId, productSpecId, symbol)
             }
-            //if(symbol == "plus"){
-            //    countNow = countNow + 1
-            //    if(countNow > quantity){
-            //        return
-            //    }
-            //    else{
-            //        $this.parent().siblings(".CountInput").attr("value", countNow)
-            //        UpdateCart(productId, productSpecId, symbol)
-            //    }
-            //}
-            //else if(symbol == "minus"){
-            //    countNow = countNow -1
-            //    if(countNow == 0){
-            //        $this.parent().siblings(".CountInput").attr("value", countNow)
-            //        let data ={'productId' : productId, 'productSpecId' : productSpecId}
-            //        DelProductfromCarBySession(data)
-            //    }
-            //    else{
-            //        $this.parent().siblings(".CountInput").attr("value", countNow)
-            //        UpdateCart(productId, productSpecId, symbol)
-            //    }
-            //}
         }
 
         //更新購物車單筆資料
@@ -484,6 +471,9 @@
                     response.forEach(x =>{
                         $("#town").append(`<option value="${x["id"]}" >${x["name"]}</option>`)
                     })
+
+                    //自動輸入
+                    $("#inputRecipientAddr").val($("#area  option:selected").text())
                 },
                 error:function(response){
                     console.log("找不到")
@@ -493,6 +483,11 @@
 
         //地址完成後改變input
         function BuildAddr(){
+            let area = $("#area option:selected").text()
+            let town = $("#town  option:selected").text()
+            //自動輸入
+            $("#inputRecipientAddr").val(area + town)
+
             console.log("地址建立完成", $("#province option:selected").text(), $("#city option:selected").text(), $("#area option:selected").text(), $("#town option:selected").text())
         }
 
@@ -519,26 +514,30 @@
 
         //建立訂單
         function PlaceOrder(){
-            let carData = GetProductFromCarBySession()
-            if(carData == undefined){
+            let cartData = GetProductFromCarBySession()
+            //購物車沒商品
+            if(cartData == undefined){
                 alert("請添加商品至購物車")
                 return
             }
 
+            //訂單地址不全
             if($("#inputRecipient").val() == "" || $("#inputRecipientPhone").val() == "" || $("#inputRecipientAddr").val() == "" || $("#province").val() == "" || $("#city").val() == "" || $("#area").val() == "" || $("#town").val() == ""){
                 alert("請完成收件資訊")
                 return
             }
 
-           if($("#selectPayment").val() == ""){
-               alert("請選擇付款方式")
+            //付款方式未選擇
+            if($("#selectPayment").val() == ""){
+                alert("請選擇付款方式")
                 return
-           }
+            }
 
+            //商品數量不足
             let TF = true
-            for(let x = 0; x < carData.length; x++){
+            for(let x = 0; x < cartData.length; x++){
                 if(TF){
-                    TF = CheckCanBuy(carData[x].productSpecId, carData[x].amount)
+                    TF = CheckCanBuy(cartData[x].productSpecId, cartData[x].amount)
                 }
             }
 
@@ -547,26 +546,68 @@
                 return
             }
 
+            //購物未大於最小值
+            let paymentType = $("#selectPayment").val()
+            if(paymentType == "USDT" || "ETH" || "BTC"){
+                //最小值
+                let USDTLowLimit = 8
+                let ETHLowLimit = 0.03
+                let BTCLowLimit = 0.0008
+
+                let payFormula = GetPayFormula();
+                let payTotalPrice = parseInt($("#lbTPrice").text())
+                let number = 0
+                let payResult = 0
+                switch(paymentType){
+                    case "USDT" :
+                        payResult = payTotalPrice / payFormula.PairsPrice.USDT_RMB.SellPrice;
+                        if(payResult < USDTLowLimit){
+                            let limitPay = payFormula.PairsPrice.USDT_RMB.SellPrice * USDTLowLimit
+                            alert("選擇USDT結帳時，商品CGP價格需超過" + limitPay)
+                            return
+                        }
+                        break;
+                    case "ETH" : 
+                        payResult = payTotalPrice / (payFormula.PairsPrice.USDT_RMB.SellPrice * payFormula.PairsPrice.ETH_USDT.SellPrice)
+                        if(payResult < ETHLowLimit){
+                            let limitPay = (payFormula.PairsPrice.USDT_RMB.SellPrice * payFormula.PairsPrice.ETH_USDT.SellPrice) * ETHLowLimit
+                            alert("選擇ETH結帳時，商品CGP價格需超過" + limitPay)
+                            return
+                        }
+                        break;
+                    case "BTC" :
+                        payResult = payTotalPrice / (payFormula.PairsPrice.USDT_RMB.SellPrice * payFormula.PairsPrice.BTC_USDT.SellPrice)
+                        if(payResult < BTCLowLimits){
+                            let limitPay = (payFormula.PairsPrice.USDT_RMB.SellPrice * payFormula.PairsPrice.BTC_USDT.SellPrice) * BTCLowLimits
+                            alert("選擇BTC結帳時，商品CGP價格需超過" + limitPay)
+                            return
+                        }
+                        break;
+                }
+            }
+
+
+            //製作商品細節
             let productList = []
 
-            for(let x = 0; x < carData.length; x++){
+            for(let x = 0; x < cartData.length; x++){
 
-                console.log(carData[x])
+                console.log(cartData[x])
 
                 //取得商品
-                let Product = GetProductById(carData[x].productId)
+                let Product = GetProductById(cartData[x].productId)
                 //取得型號
-                let ProductSpec = GetProductSpecByProdSpecId(carData[x].productSpecId)
+                let ProductSpec = GetProductSpecByProdSpecId(cartData[x].productSpecId)
 
                 let product = {
-                    "ProductId": carData[x].productId,
-                    "ProductSpecId": carData[x].productSpecId,
+                    "ProductId": cartData[x].productId,
+                    "ProductSpecId": cartData[x].productSpecId,
                     "ProductName": Product.Title,
                     "Price": Product.Price,
                     "ProductSpecName": ProductSpec.Name,
                     "storageQuantity": ProductSpec.Quantity,
-                    "BuyQuantity": carData[x].amount,
-                    "TotalPrice": carData[x].subTotal
+                    "BuyQuantity": cartData[x].amount,
+                    "TotalPrice": cartData[x].subTotal
                 }
 
                 productList.push(product)
@@ -574,6 +615,7 @@
 
             console.log(productList)
 
+            //建立訂單資料
             let formdata = {
                 "MerchantId":merchantId,
                 "BuyerName": $("#inputRecipient").val(),
@@ -607,7 +649,7 @@
                         location.href = response
                     }
                     else{
-                        alert.(response)
+                        alert(response)
                     }
                 },
                 error:function(response){
@@ -616,6 +658,7 @@
             })
         }
 
+        //清空購物車
         function CleanCar(){
             $.ajax({
                 type:"Delete",
@@ -629,6 +672,30 @@
                     console.log("找不到")
                 }
             })
+        }
+
+        //取得付款公式
+        function GetPayFormula(){
+            let data = false
+            $.ajax({
+                type:"Post",
+                url:"https://localhost:44302/api/Rate/GetAllRate",
+                processData : false, 
+                contentType : 'application/json;charset=UTF-8',
+                data:JSON.stringify({
+                    sToken:sToken
+                }),
+                dataType:"json",
+                async:false, //可能不好
+                success:function(response){
+                    console.log("二次已連上GetAllRate", response)
+                    data = response
+                },
+                error:function(response){
+                    console.log("找不到")
+                }
+            })
+            return data
         }
     </script>
 }

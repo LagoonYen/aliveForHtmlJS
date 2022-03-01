@@ -1019,7 +1019,9 @@ input, select, textarea {
   vertical-align: middle;
   padding: .5em 1em;
   border-top: 1px solid #ebebeb;
-  border-bottom: 1px solid #ebebeb; }
+  border-bottom: 1px solid #ebebeb; 
+  min-width:100px
+}
 
 .tab-basic td {
   background-color: #f8f8f8;
@@ -1586,14 +1588,16 @@ input, select, textarea {
   color: #f4694a; }
 
 .order-list {
-  width: 35em;
+  width: 70em;
   max-width: 95%;
   margin: 0 auto; }
-  .order-list td {
-    padding: 1em; }
+    .order-list td {
+        min-width: 15em;
+        padding: 1em;
+    }
   .order-list .td-status {
     text-align: center;
-    width: 5em; }
+    min-width: 15em; }
 
 .order-detial {
   color: #555555;
@@ -2015,4 +2019,5 @@ input, select, textarea {
   .order-detial {
     padding: .5em 0; }
     .order-detial dl {
-      margin: .5em; } }
+        margin: .5em;
+    } }

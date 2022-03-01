@@ -9,24 +9,11 @@
     <div class="content-con">
         <h2 class="page-tit"><em>订单资讯</em><span>订单详细资讯</span></h2>
         <section class="order-detial">
-            <dl>
-                @*
-                <asp:Literal runat="server" ClientIDMode="Static" ID="Plist"></asp:Literal>*@
+            <dl id="OrderDetailPos">
+                
+            </dl>
+            <dl id="ProductDetailPos">
 
-                <dt>订单编号</dt>
-                <dd>161102125701</dd>
-                <dt>收件人</dt>
-                <dd>黄小姐</dd>
-                <dt>收件人手机号</dt>
-                <dd>18616057511</dd>
-                <dt>收件人地址</dt>
-                <dd>上海市闵行区龙百四村67号401室</dd>
-                <dt>订单备注</dt>
-                <dd>不要放蜂槽</dd>
-                <dt>订单状态</dt>
-                <dd><span class="status-solved">已完成</span><span class="status-processing">处理中</span></dd>
-                <dt>物流状态</dt>
-                <dd>顺丰 12345678928</dd>
             </dl>
         </section>
         <section class="order-action">
@@ -34,3 +21,127 @@
         </section>
     </div>
 </article>
+
+<script>
+    //取得parameter
+    let getUrlString = location.href;
+    let url = new URL(getUrlString);
+
+    //商店名稱
+    var merchantId = "alive"
+    //當前商品Id
+    var orderId = url.searchParams.get('orderId')
+    //當前訂購人電話
+    var phoneNo = url.searchParams.get('phoneNo')
+
+    console.log("取得變數", merchantId, orderId, phoneNo)
+
+    $(function(){
+        let result = GetOrderDetail()
+        
+        BuildOrderDetailView(result)
+    })
+
+    //取得訂單細節
+    function GetOrderDetail(){
+        let data = false
+        $.ajax({
+            type:"Get",
+            url:"https://localhost:44302/api/Order/GetOrderByOrderId?merchantId=" + merchantId + "&phoneNo=" + phoneNo + "&orderId=" + orderId,
+            processData : false, 
+            contentType : 'application/json;charset=UTF-8',
+            dataType:"json",
+            async:false,  //可能不好
+            success:function(response){
+                console.log("三次已連上GetOrderByOrderId", response)
+                data = response
+            },
+            error:function(response){
+                console.log("找不到")
+            }
+        })
+        return data
+    }
+
+    //建立訂單細節畫面
+    function BuildOrderDetailView(result){
+        let detail = result
+
+        //訂單狀態
+        let orderStatus
+        switch(detail["OrderStatus"]){
+            case 0 : orderStatus = "處理中"
+                break;
+            case 1 : orderStatus = "已完成"
+                break;
+            case 2 : orderStatus = "已退款"
+                break;
+            case 3 : orderStatus = "已建立"
+                break;
+        }
+
+        let payStatus
+        switch(detail.PayStatus){
+            case 0 : payStatus = "未付款"
+                break;
+            case 1 : payStatus = "已付款"
+                break;
+        }
+
+        let shipStatus
+        switch(detail.ShipStatus){
+            case 0 : shipStatus = "未出貨"
+                break;
+            case 1 : shipStatus = "已出貨"
+                break;
+        }
+
+        let paymentType
+        switch(detail.PaymentType){
+            case 0 : paymentType = "CC"
+                break;
+            case 1 : paymentType = "ATM"
+                break;
+            case 2 : paymentType = "MMK"
+                break;
+            case 3 : paymentType = "CGP"
+                break;
+            case 4 : paymentType = "USDT"
+                break;
+            case 5 : paymentType = "BTC"
+                break;
+            case 6 : paymentType = "ETH"
+                break;
+        }
+
+        if(payStatus=="未付款"){
+            var QRCode = (detail.PaymentInfo) ? detail.PaymentInfo : ""
+        }
+
+        let dtOrderID = $(`<dt>訂單編號</dt><dd>${orderId}</dd>`)
+        let dtBuyerName = $(`<dt>收件人</dt><dd>${detail.Buyer.Name}</dd>`)
+        let dtBuyerMobile = $(`<dt>收件人手機號</dt><dd>${detail.Buyer.Mobile}</dd>`)
+        let dtReceiverAddr = $(`<dt>收件人地址</dt><dd>${detail.Receiver.City}${detail.Receiver.Villages}${detail.Receiver.Address}</dd>`)
+        let dtMomo = (detail.Receiver.Momo == undefined) ? $(`<dt>訂單備註</dt><dd></dd>`) : $(`<dt>訂單備註</dt><dd>${detail.Receiver.Momo}</dd>`)
+        let dtPayStatus = (payStatus == "未付款") ? 
+                                (QRCode == "") ? 
+                                    $(`<dt>訂單狀態</dt><dd>${payStatus} / 缺少二維碼</dd>`) :
+                                    $(`<dt>訂單狀態</dt><dd>${payStatus} / <a href="${QRCode}">付款去</a></dd>`) : 
+                                        $(`<dt>訂單狀態</dt><dd>${payStatus}</dd>`)
+        let dtShipStatus = $(`<dt>物流狀態</dt><dd>${shipStatus}</dd>`)
+        let dtPaymentType = $(`<dt>支付管道</dt><dd>${paymentType}</dd>`)
+        let dtTotal = $(`<dt>總付款金額</dt><dd>${detail.TotalPrice}</dd>`)
+
+        $("#OrderDetailPos").append(dtOrderID).append(dtBuyerName).append(dtBuyerMobile).append(dtReceiverAddr).append(dtMomo).append(dtPayStatus).append(dtShipStatus).append(dtPaymentType).append(dtTotal)
+
+        //detail.OrderDetails.forEach(x =>{
+            
+        //})
+
+       
+
+        
+    }
+
+
+</script>
